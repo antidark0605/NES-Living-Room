@@ -109,7 +109,10 @@ public final class MainActivity extends Activity {
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("*/*");
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
-        startActivityForResult(intent,PICK_ROM);
+        try { startActivityForResult(intent,PICK_ROM); }
+        catch(android.content.ActivityNotFoundException e) {
+            android.widget.Toast.makeText(this,"No compatible file picker on this TV",android.widget.Toast.LENGTH_LONG).show();
+        }
     }
     @Override protected void onActivityResult(int request,int result,Intent data) {
         super.onActivityResult(request,result,data);
@@ -121,6 +124,8 @@ public final class MainActivity extends Activity {
             } catch(Exception ignored){}
             if(name==null || !name.toLowerCase(java.util.Locale.ROOT).endsWith(".nes")) {
                 android.widget.Toast.makeText(this,"Select a .nes file",android.widget.Toast.LENGTH_LONG).show();
+            } else if (!NesRomInspector.hasValidHeader(getContentResolver(),uri)) {
+                android.widget.Toast.makeText(this,"Invalid iNES ROM header",android.widget.Toast.LENGTH_LONG).show();
             } else {
                 try { getContentResolver().takePersistableUriPermission(uri,Intent.FLAG_GRANT_READ_URI_PERMISSION); }
                 catch(SecurityException ignored){}
