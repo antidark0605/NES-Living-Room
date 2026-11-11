@@ -30,7 +30,7 @@ jobs:
           git fetch --depth=1 origin e0f3086a8104f8fbbe49a2615b10401504a9533f
           git checkout --detach FETCH_HEAD
           "${ANDROID_HOME}/ndk/27.2.12479018/ndk-build" \
-            NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=jni/Android.mk \
+            NDK_PROJECT_PATH="$PWD" APP_BUILD_SCRIPT="$PWD/jni/Android.mk" \
             APP_ABI=armeabi-v7a APP_PLATFORM=android-23 -j2
           test -f libs/armeabi-v7a/libretro.so
           mkdir -p "${GITHUB_WORKSPACE}/app/src/main/jniLibs/armeabi-v7a"

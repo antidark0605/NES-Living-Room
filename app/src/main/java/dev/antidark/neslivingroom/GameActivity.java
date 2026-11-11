@@ -147,10 +147,11 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
         pauseDialog=new AlertDialog.Builder(this)
             .setTitle("Game paused")
             .setItems(new String[]{"Resume","Controller settings (return to menu)","Exit game"},(dialog,which)->{
+                pauseDialog=null;
                 if(which==0) startEmulation();
                 else finish();
             })
-            .setOnCancelListener(dialog->startEmulation())
+            .setOnCancelListener(dialog->{pauseDialog=null;startEmulation();})
             .create();
         pauseDialog.show();
     }
