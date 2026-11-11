@@ -3,6 +3,8 @@ package dev.antidark.neslivingroom;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.view.KeyEvent;
+import android.view.InputDevice;
+import android.view.MotionEvent;
 
 /** Maps Android digital key events into NES controls. No emulator core is loaded. */
 public final class NesInput {
@@ -17,6 +19,7 @@ public final class NesInput {
     };
     private final SharedPreferences prefs;
     private final boolean[] physical = new boolean[10];
+    private final boolean[] analogDirection = new boolean[4];
     private final int[] keys = new int[10];
     private int turboHz;
 
@@ -49,13 +52,30 @@ public final class NesInput {
         boolean pulse = ((uptimeMillis * turboHz / 500L) % 2L)==0L;
         int mask=0;
         for (int i=0;i<8;i++) {
-            boolean held=physical[i] || (i==A && physical[TURBO_A] && pulse)
+            boolean held=physical[i] || (i<4 && analogDirection[i]) || (i==A && physical[TURBO_A] && pulse)
                     || (i==B && physical[TURBO_B] && pulse);
             if (held) mask|=1<<i;
         }
         return mask;
     }
+    /** Support Bluetooth gamepads exposing directions as HAT axes or left joystick. */
+    public boolean onMotion(MotionEvent event) {
+        if ((event.getSource() & InputDevice.SOURCE_JOYSTICK) != InputDevice.SOURCE_JOYSTICK) return false;
+        float hatX = event.getAxisValue(MotionEvent.AXIS_HAT_X);
+        float hatY = event.getAxisValue(MotionEvent.AXIS_HAT_Y);
+        float stickX = event.getAxisValue(MotionEvent.AXIS_X);
+        float stickY = event.getAxisValue(MotionEvent.AXIS_Y);
+        // HAT takes precedence when pressed. Analog stick uses a dead zone.
+        float x=Math.abs(hatX)>0.5f?hatX:stickX;
+        float y=Math.abs(hatY)>0.5f?hatY:stickY;
+        analogDirection[LEFT]=x < -0.5f;
+        analogDirection[RIGHT]=x > 0.5f;
+        analogDirection[UP]=y < -0.5f;
+        analogDirection[DOWN]=y > 0.5f;
+        return true;
+    }
     public void releaseAll() {
         for (int i=0;i<physical.length;i++) physical[i]=false;
+        for (int i=0;i<analogDirection.length;i++) analogDirection[i]=false;
     }
 }
