@@ -17,9 +17,28 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.7'
-      - name: Assemble debug APK
+      - name: Install Android native toolchain
+        shell: bash
+        run: |
+          yes | "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" "ndk;27.2.12479018" "cmake;3.22.1" || true
+          test -x "${ANDROID_HOME}/ndk/27.2.12479018/ndk-build"
+      - name: Compile GPLv2 FCEUmm core for 32-bit ARM
+        shell: bash
+        run: |
+          git clone --filter=blob:none --no-checkout https://github.com/libretro/libretro-fceumm.git "${RUNNER_TEMP}/fceumm"
+          cd "${RUNNER_TEMP}/fceumm"
+          git fetch --depth=1 origin e0f3086a8104f8fbbe49a2615b10401504a9533f
+          git checkout --detach FETCH_HEAD
+          "${ANDROID_HOME}/ndk/27.2.12479018/ndk-build" \
+            NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=jni/Android.mk \
+            APP_ABI=armeabi-v7a APP_PLATFORM=android-23 -j2
+          test -f libs/armeabi-v7a/libretro.so
+          mkdir -p "${GITHUB_WORKSPACE}/app/src/main/jniLibs/armeabi-v7a"
+          cp libs/armeabi-v7a/libretro.so "${GITHUB_WORKSPACE}/app/src/main/jniLibs/armeabi-v7a/libretro.so"
+      - name: Unit tests and playable APK
         run: gradle --no-daemon testDebugUnitTest assembleDebug
       - uses: actions/upload-artifact@v4
         with:
-          name: nes-living-room-debug
+          name: nes-living-room-armv7-debug
           path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error

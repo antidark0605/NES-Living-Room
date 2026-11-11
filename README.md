@@ -2,7 +2,7 @@
 
 A lightweight, remote-first NES application for Android TV.
 
-> **Status: Android TV frontend and input-test MVP.** The NES emulation engine is **not integrated yet**. This version cannot execute ROMs. The ROM picker validates access only; it is not a playable emulator.
+> **Status: playable-core experimental APK.** The CI pipeline builds a GPLv2 FCEUmm native core for ARMv7 and packages it with our libretro bridge. The result has not been validated on MiTV-MSSP3 hardware; ROM/video/audio compatibility is not guaranteed.
 
 ## Target hardware
 
@@ -25,7 +25,7 @@ A lightweight, remote-first NES application for Android TV.
 
 ## Build
 
-Install JDK 17 and Android SDK Platform 35. From the repository root:
+Install JDK 17 and Android SDK Platform 35. From the repository root (after placing the ARMv7 `libretro.so` in `app/src/main/jniLibs/armeabi-v7a/` and installing Android NDK 27.2 / CMake 3.22.1):
 
 ```sh
 gradle assembleDebug
@@ -37,10 +37,10 @@ The Gradle wrapper is not committed in this first scaffold. Use a locally instal
 ## TV navigation
 
 - Use remote D-pad to select buttons, OK to activate, Back to return.
-- Select **Choose NES ROM** to test document access; selection is stored but playback is not implemented.
+- Select **Choose NES ROM**, then **Play selected ROM** to launch the FCEUmm core.
 - Select **Controller settings** and choose a NES action, then press its physical gamepad button to bind it.
 - Select **Input tester** to see effective NES controls including turbo pulses.
-- In a game (future core integration), Back must open a pause menu and never be consumed by the NES controller.
+- In a game, Back opens a simple pause dialog. Resume currently restarts the ROM from the beginning; save states are not implemented.
 
 ## Input model
 
@@ -48,15 +48,25 @@ NES input has only 8 standard actions: D-pad x4, A, B, Start, Select. Turbo A an
 
 Supported initially: Android KeyEvent digital buttons and D-pad. Controllers reporting only analog axes or unsupported HID/USB protocols are not yet supported.
 
-## Roadmap
+## Build a playable APK
 
-1. TV UI, ROM picker, header checks, key-binding UI and tester (this PR)
-2. Integrate a licensed NES emulation core with armeabi-v7a binary, rendering, audio and ROM loading
-3. Pause/resume, save states, in-game controller configuration
-4. Controller-specific profiles, analog axis handling, automated hardware validation
+CI installs Android SDK + NDK, fetches pinned [FCEUmm](https://github.com/libretro/libretro-fceumm) revision `e0f3086a8104f8fbbe49a2615b10401504a9533f`, compiles `libretro.so` for `armeabi-v7a`, and assembles the Android APK with `nesbridge.so`.
 
-Choose an emulator core only after reviewing source license and 32-bit ABI support. Never copy third-party emulator code without preserving notices and license requirements.
+1. Open [GitHub Actions](https://github.com/antidark0605/NES-Living-Room/actions) and select a successful **Android build** from this branch.
+2. Download the `nes-living-room-debug` artifact and unzip it.
+3. Install `app-debug.apk` on Android TV using `adb install -r app-debug.apk`.
+4. Navigate with the TV remote's D-pad / OK / Back, select a `.nes` file, then select **Play selected ROM**.
 
-## Planned core\n\nFCEUmm (Libretro) is the leading candidate. It is GPLv2 licensed, so we must review source distribution and license obligations before shipping a combined application. The core has not yet been integrated or tested on ARMv7. Track work in [Issue #2](https://github.com/antidark0605/NES-Living-Room/issues/2).\n\n## Legal
+CI contains a pinned source checkout so builds can be reproduced. The core source, its GPLv2 license and our JNI integration source must be provided when distributing a combined APK. See [third-party notice](docs/THIRD_PARTY.md).
+
+## Known limitations
+
+- Only `.nes` ROM files supported by FCEUmm are in scope; `.fds`/`.unf` not yet wired to ROM selection.
+- No save states, save-RAM persistence, controller profile per physical device, or analog axis support.
+- The pause dialog's Resume action reloads the game rather than restoring running state.
+- Audio/video synchronization and 32-bit native core behavior need device testing.
+- The Android Storage Access Framework picker itself depends on a TV-accessible document provider.
+
+## Legal
 
 Supply your own legally obtained ROMs. This project does not include games, BIOS files, or game assets.

@@ -22,7 +22,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.graphics.drawable.GradientDrawable;
 
-/** Minimal remote-first TV shell. Emulator playback intentionally not implemented. */
+/** Remote-first Android TV launcher and controller mapping shell. */
 public final class MainActivity extends Activity {
     private static final int PICK_ROM = 100;
     private final Handler handler = new Handler(Looper.getMainLooper());
@@ -83,18 +83,19 @@ public final class MainActivity extends Activity {
         return b;
     }
     private void showHome() {
-        page("home","NES Living Room","Android TV • D-pad + OK + Back • Frontend preview, no emulation core yet");
+        page("home","NES Living Room","Android TV • D-pad + OK + Back • FCEUmm native core • ARMv7 test build");
         addButton("Choose NES ROM", v->chooseRom());
+        addButton("Play selected ROM", v->startGame());
         addButton("Controller settings",v->showSettings());
         addButton("Input tester",v->showTester());
-        SharedPreferences p=getPreferences(MODE_PRIVATE);
+        SharedPreferences p=getSharedPreferences("nes_rom",MODE_PRIVATE);
         String rom=p.getString("rom_name","No ROM selected");
         TextView status=new TextView(this);
-        status.setText("ROM: "+rom+"\nPlayback is not available until an NES core is integrated.");
+        status.setText("ROM: "+rom+"\nARMv7 FCEUmm test build; game support is experimental.");
         status.setTextColor(0xffb7c2dd); status.setTextSize(16); column.addView(status);
         column.getChildAt(2).requestFocus();
     }
-    private void chooseRom() {
+    private void startGame() {\n        if (!getSharedPreferences("nes_rom",MODE_PRIVATE).contains("uri")) {\n            android.widget.Toast.makeText(this,"Choose a NES ROM first",android.widget.Toast.LENGTH_SHORT).show();\n            return;\n        }\n        startActivity(new Intent(this,GameActivity.class));\n    }\n    private void chooseRom() {
         Intent intent=new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("*/*");
@@ -114,7 +115,7 @@ public final class MainActivity extends Activity {
             } else {
                 try { getContentResolver().takePersistableUriPermission(uri,Intent.FLAG_GRANT_READ_URI_PERMISSION); }
                 catch(SecurityException ignored){}
-                getPreferences(MODE_PRIVATE).edit().putString("rom_uri",uri.toString()).putString("rom_name",name).apply();
+                getSharedPreferences("nes_rom",MODE_PRIVATE).edit().putString("uri",uri.toString()).putString("rom_name",name).apply();
             }
         }
         showHome();
