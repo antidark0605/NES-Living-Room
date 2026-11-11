@@ -13,5 +13,7 @@ public final class NativeNes {
     public static native short[] frameAudio();
     public static native int sampleRate();
     public static native double frameRate();
+    public static native byte[] saveState();
+    public static native boolean loadState(byte[] state);
     public static native void close();
 }
