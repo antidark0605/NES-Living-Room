@@ -19,7 +19,8 @@ A lightweight, remote-first NES application for Android TV.
 - System document picker for `.nes` files, iNES/NES 2.0 header validation and persistent URI access when granted
 - Configurable physical keys for NES Up, Down, Left, Right, A, B, Start, Select
 - Separate Turbo A / Turbo B bindings (default **X / Y**); adjustable turbo rate (10 / 15 / 20 presses per second)
-- On-device input tester with a 60 Hz status update
+- Connected controller diagnostics (name, VID/PID, reported input source)
+- On-device input tester with a 60 Hz status update and analog/HAT support
 - Per-device-independent profile for initial iteration; multi-device profiles are planned
 - No ROMs or copyrighted game assets bundled
 
@@ -40,20 +41,20 @@ The Gradle wrapper is not committed in this first scaffold. Use a locally instal
 - Select **Choose NES ROM**, then **Play selected ROM** to launch the FCEUmm core.
 - Select **Controller settings** and choose a NES action, then press its physical gamepad button to bind it.
 - Select **Input tester** to see effective NES controls including turbo pulses.
-- In a game, Back opens a simple pause dialog. Resume currently restarts the ROM from the beginning; save states are not implemented.
+- In a game, Back opens the pause dialog. Resume continues the same core instance. Save/Load State uses one persistent slot per ROM (SHA-256-based filename).
 
 ## Input model
 
 NES input has only 8 standard actions: D-pad x4, A, B, Start, Select. Turbo A and Turbo B are **additional physical bindings**, not extra NES buttons. Default mapping: A → NES A, B → NES B, X → Turbo A, Y → Turbo B. Previously saved custom bindings remain unchanged. When Turbo A is held, A alternates pressed/released at the selected rate. Ordinary A remains a held input. No Xbox-specific key layout is assumed.
 
-Supported initially: Android KeyEvent digital buttons and D-pad. Controllers reporting only analog axes or unsupported HID/USB protocols are not yet supported.
+Supported: Android KeyEvent digital buttons and D-pad, standard joystick HAT directions and left analog stick with a dead zone. Actual support depends on the device providing Android input events; unsupported USB HID protocols cannot be repaired by this app. 8BitDo modes can expose different key mappings.
 
 ## Build a playable APK
 
 CI installs Android SDK + NDK, fetches pinned [FCEUmm](https://github.com/libretro/libretro-fceumm) revision `e0f3086a8104f8fbbe49a2615b10401504a9533f`, compiles `libretro.so` for `armeabi-v7a`, and assembles the Android APK with `nesbridge.so`.
 
 1. Open [GitHub Actions](https://github.com/antidark0605/NES-Living-Room/actions) and select a successful **Android build** from this branch.
-2. Download the `nes-living-room-debug` artifact and unzip it.
+2. Download the `nes-living-room-armv7-debug` artifact and unzip it.
 3. Install `app-debug.apk` on Android TV using `adb install -r app-debug.apk`.
 4. Navigate with the TV remote's D-pad / OK / Back, select a `.nes` file, then select **Play selected ROM**.
 
@@ -62,10 +63,11 @@ CI contains a pinned source checkout so builds can be reproduced. The core sourc
 ## Known limitations
 
 - Only `.nes` ROM files supported by FCEUmm are in scope; `.fds`/`.unf` not yet wired to ROM selection.
-- No save states, save-RAM persistence, controller profile per physical device, or analog axis support.
-- The pause dialog's Resume action reloads the game rather than restoring running state.
+- Save State/Load State is a single manual slot per ROM. Automatic save-RAM persistence, multi-slot saves, and per-device controller profiles are not implemented.
+- Save states are not guaranteed compatible across different emulator-core versions.
 - Audio/video synchronization and 32-bit native core behavior need device testing.
 - The Android Storage Access Framework picker itself depends on a TV-accessible document provider.
+- The emulator core needs a real-device ROM boot and sound test; a CI pass only verifies the build.
 
 ## Legal
 
