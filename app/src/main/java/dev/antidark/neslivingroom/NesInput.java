@@ -28,19 +28,19 @@ public final class NesInput {
         for (int i=0;i<keys.length;i++) keys[i] = prefs.getInt("key_"+i, DEFAULTS[i]);
         turboHz = prefs.getInt("turbo_hz", 15);
     }
-    public int binding(int action) { return keys[action]; }
-    public void bind(int action, int keyCode) {
+    public synchronized int binding(int action) { return keys[action]; }
+    public synchronized void bind(int action, int keyCode) {
         if (action < 0 || action >= keys.length) throw new IllegalArgumentException("action");
         keys[action]=keyCode;
         physical[action]=false;
         prefs.edit().putInt("key_"+action,keyCode).apply();
     }
-    public int turboHz() { return turboHz; }
-    public void cycleTurboHz() {
+    public synchronized int turboHz() { return turboHz; }
+    public synchronized void cycleTurboHz() {
         turboHz = turboHz==10 ? 15 : turboHz==15 ? 20 : 10;
         prefs.edit().putInt("turbo_hz",turboHz).apply();
     }
-    public boolean onKey(int keyCode, boolean down) {
+    public synchronized boolean onKey(int keyCode, boolean down) {
         boolean consumed=false;
         for (int i=0;i<keys.length;i++) {
             if (keys[i]==keyCode) { physical[i]=down; consumed=true; }
@@ -48,7 +48,7 @@ public final class NesInput {
         return consumed;
     }
     /** At a specific monotonic timestamp, return an NES-standard eight-button mask. */
-    public int mask(long uptimeMillis) {
+    public synchronized int mask(long uptimeMillis) {
         boolean pulse = ((uptimeMillis * turboHz / 500L) % 2L)==0L;
         int mask=0;
         for (int i=0;i<8;i++) {
@@ -59,7 +59,7 @@ public final class NesInput {
         return mask;
     }
     /** Support Bluetooth gamepads exposing directions as HAT axes or left joystick. */
-    public boolean onMotion(MotionEvent event) {
+    public synchronized boolean onMotion(MotionEvent event) {
         if ((event.getSource() & InputDevice.SOURCE_JOYSTICK) != InputDevice.SOURCE_JOYSTICK) return false;
         float hatX = event.getAxisValue(MotionEvent.AXIS_HAT_X);
         float hatY = event.getAxisValue(MotionEvent.AXIS_HAT_Y);
@@ -74,7 +74,18 @@ public final class NesInput {
         analogDirection[DOWN]=y > 0.5f;
         return true;
     }
-    public void releaseAll() {
+    public synchronized void resetDefaults() {
+        for(int i=0;i<keys.length;i++) {
+            keys[i]=DEFAULTS[i];
+            physical[i]=false;
+        }
+        for(int i=0;i<analogDirection.length;i++) analogDirection[i]=false;
+        turboHz=15;
+        SharedPreferences.Editor edit=prefs.edit();
+        for(int i=0;i<keys.length;i++) edit.remove("key_"+i);
+        edit.putInt("turbo_hz",15).apply();
+    }
+    public synchronized void releaseAll() {
         for (int i=0;i<physical.length;i++) physical[i]=false;
         for (int i=0;i<analogDirection.length;i++) analogDirection[i]=false;
     }
