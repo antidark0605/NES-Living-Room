@@ -13,11 +13,11 @@ Physical gamepad KeyEvents --> NesInput --> 8-bit NES pad mask
 
 ## Boundaries
 
-- **UI focus is separate from NES control:** remote keys navigate menus. Tester intercepts a configured key if it collides with a focus key; keep testing limited to external gamepad buttons.
-- **Input mapper:** digital Android key codes, 8 NES buttons, two dedicated turbo bindings. Independent from any Xbox layout.
+- **UI focus is separate from NES control:** remote keys navigate menus. Tester accepts SOURCE_GAMEPAD events only; the TV remote retains ordinary menu focus. Some hybrid devices may report both capabilities and require device-specific testing.
+- **Input mapper:** digital Android key codes, 8 NES buttons, two dedicated turbo bindings defaulting to X and Y. Independent from any Xbox layout.
 - **Turbo:** timestamps use `SystemClock.uptimeMillis()`; 10/15/20 pulses per second. The frontend returns an 8-bit mask to a future core at emulated-frame intervals.
-- **ROM loading:** Android Storage Access Framework grants URI access; the future core must read bytes from `ContentResolver` rather than assuming filesystem paths.
-- **Emulator:** intentionally absent. Integrate only after selecting a license-compatible implementation and building 32-bit ARM binaries.
+- **ROM loading:** Android Storage Access Framework grants URI access; a lightweight iNES/NES2 header validator verifies the NES magic bytes before persisting the URI. It is not a checksum or full ROM integrity test. The future core must read bytes from `ContentResolver` rather than assuming filesystem paths.
+- **Emulator:** FCEUmm/libretro is a candidate; its GPLv2 obligations need review. Core intentionally absent. Integrate only after selecting a license-compatible implementation and building 32-bit ARM binaries.
 - **Unsupported hardware:** missing kernel input driver cannot be fixed by an APK. Analog axes are also out of scope for this PR.
 
 ## Validation needed

@@ -16,9 +16,9 @@ A lightweight, remote-first NES application for Android TV.
 
 - Android TV launcher entry (`LEANBACK_LAUNCHER`)
 - No touch screen required
-- System document picker for `.nes` files, persistent URI access when granted
+- System document picker for `.nes` files, iNES/NES 2.0 header validation and persistent URI access when granted
 - Configurable physical keys for NES Up, Down, Left, Right, A, B, Start, Select
-- Separate Turbo A / Turbo B bindings; adjustable turbo rate (10 / 15 / 20 presses per second)
+- Separate Turbo A / Turbo B bindings (default **X / Y**); adjustable turbo rate (10 / 15 / 20 presses per second)
 - On-device input tester with a 60 Hz status update
 - Per-device-independent profile for initial iteration; multi-device profiles are planned
 - No ROMs or copyrighted game assets bundled
@@ -44,19 +44,19 @@ The Gradle wrapper is not committed in this first scaffold. Use a locally instal
 
 ## Input model
 
-NES input has only 8 standard actions: D-pad x4, A, B, Start, Select. Turbo A and Turbo B are **additional physical bindings**, not extra NES buttons. When Turbo A is held, A alternates pressed/released at the selected rate. Ordinary A remains a held input. No Xbox-specific key layout is assumed.
+NES input has only 8 standard actions: D-pad x4, A, B, Start, Select. Turbo A and Turbo B are **additional physical bindings**, not extra NES buttons. Default mapping: A → NES A, B → NES B, X → Turbo A, Y → Turbo B. Previously saved custom bindings remain unchanged. When Turbo A is held, A alternates pressed/released at the selected rate. Ordinary A remains a held input. No Xbox-specific key layout is assumed.
 
 Supported initially: Android KeyEvent digital buttons and D-pad. Controllers reporting only analog axes or unsupported HID/USB protocols are not yet supported.
 
 ## Roadmap
 
-1. TV UI, ROM picker, key-binding UI and tester (this PR)
+1. TV UI, ROM picker, header checks, key-binding UI and tester (this PR)
 2. Integrate a licensed NES emulation core with armeabi-v7a binary, rendering, audio and ROM loading
 3. Pause/resume, save states, in-game controller configuration
 4. Controller-specific profiles, analog axis handling, automated hardware validation
 
 Choose an emulator core only after reviewing source license and 32-bit ABI support. Never copy third-party emulator code without preserving notices and license requirements.
 
-## Legal
+## Planned core\n\nFCEUmm (Libretro) is the leading candidate. It is GPLv2 licensed, so we must review source distribution and license obligations before shipping a combined application. The core has not yet been integrated or tested on ARMv7. Track work in [Issue #2](https://github.com/antidark0605/NES-Living-Room/issues/2).\n\n## Legal
 
 Supply your own legally obtained ROMs. This project does not include games, BIOS files, or game assets.

@@ -158,7 +158,7 @@ public final class MainActivity extends Activity {
         }
         if("tester".equals(screen)) {
             if(code==KeyEvent.KEYCODE_BACK && down) {showHome();return true;}
-            if(code!=KeyEvent.KEYCODE_BACK && input.onKey(code,down)) return true;
+            // A TV remote must keep control of menu focus. Only gamepad events feed NES input.\n            if(code!=KeyEvent.KEYCODE_BACK && (event.getSource() & InputDevice.SOURCE_GAMEPAD)==InputDevice.SOURCE_GAMEPAD\n                && input.onKey(code,down)) return true;
         }
         return super.dispatchKeyEvent(event);
     }
