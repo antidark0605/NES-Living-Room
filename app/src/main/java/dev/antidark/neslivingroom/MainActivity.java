@@ -95,7 +95,14 @@ public final class MainActivity extends Activity {
         status.setTextColor(0xffb7c2dd); status.setTextSize(16); column.addView(status);
         column.getChildAt(2).requestFocus();
     }
-    private void startGame() {\n        if (!getSharedPreferences("nes_rom",MODE_PRIVATE).contains("uri")) {\n            android.widget.Toast.makeText(this,"Choose a NES ROM first",android.widget.Toast.LENGTH_SHORT).show();\n            return;\n        }\n        startActivity(new Intent(this,GameActivity.class));\n    }\n    private void chooseRom() {
+    private void startGame() {
+        if (!getSharedPreferences("nes_rom",MODE_PRIVATE).contains("uri")) {
+            android.widget.Toast.makeText(this,"Choose a NES ROM first",android.widget.Toast.LENGTH_SHORT).show();
+            return;
+        }
+        startActivity(new Intent(this,GameActivity.class));
+    }
+    private void chooseRom() {
         Intent intent=new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("*/*");
@@ -159,7 +166,9 @@ public final class MainActivity extends Activity {
         }
         if("tester".equals(screen)) {
             if(code==KeyEvent.KEYCODE_BACK && down) {showHome();return true;}
-            // A TV remote must keep control of menu focus. Only gamepad events feed NES input.\n            if(code!=KeyEvent.KEYCODE_BACK && (event.getSource() & InputDevice.SOURCE_GAMEPAD)==InputDevice.SOURCE_GAMEPAD\n                && input.onKey(code,down)) return true;
+            // A TV remote must keep control of menu focus. Only gamepad events feed NES input.
+            if(code!=KeyEvent.KEYCODE_BACK && (event.getSource() & InputDevice.SOURCE_GAMEPAD)==InputDevice.SOURCE_GAMEPAD
+                && input.onKey(code,down)) return true;
         }
         return super.dispatchKeyEvent(event);
     }
