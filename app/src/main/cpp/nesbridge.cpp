@@ -47,6 +47,9 @@ static bool (*retro_load_game)(const retro_game_info*)=nullptr;
 static void (*retro_unload_game)()=nullptr;
 static void (*retro_run)()=nullptr;
 static void (*retro_set_controller_port_device)(unsigned,unsigned)=nullptr;
+static size_t (*retro_serialize_size)()=nullptr;
+static bool (*retro_serialize)(void*,size_t)=nullptr;
+static bool (*retro_unserialize)(const void*,size_t)=nullptr;
 static bool loaded=false;
 static double sampleRate=44100.0, fps=60.0;
 
@@ -149,6 +152,9 @@ Java_dev_antidark_neslivingroom_NativeNes_open(JNIEnv* env,jclass,jstring path,j
     retro_unload_game=sym<decltype(retro_unload_game)>("retro_unload_game");
     retro_run=sym<decltype(retro_run)>("retro_run");
     retro_set_controller_port_device=sym<decltype(retro_set_controller_port_device)>("retro_set_controller_port_device");
+    retro_serialize_size=sym<decltype(retro_serialize_size)>("retro_serialize_size");
+    retro_serialize=sym<decltype(retro_serialize)>("retro_serialize");
+    retro_unserialize=sym<decltype(retro_unserialize)>("retro_unserialize");
     if(!retro_set_environment||!retro_set_video_refresh||!retro_set_audio_sample||
        !retro_set_audio_sample_batch||!retro_set_input_poll||!retro_set_input_state||
        !retro_init||!retro_deinit||!retro_get_system_info||!retro_get_system_av_info||
@@ -208,3 +214,25 @@ extern "C" JNIEXPORT jdouble JNICALL
 Java_dev_antidark_neslivingroom_NativeNes_frameRate(JNIEnv*,jclass){return fps;}
 extern "C" JNIEXPORT void JNICALL
 Java_dev_antidark_neslivingroom_NativeNes_close(JNIEnv*,jclass){teardown();}
+
+extern "C" JNIEXPORT jbyteArray JNICALL
+Java_dev_antidark_neslivingroom_NativeNes_saveState(JNIEnv* env,jclass) {
+    if(!loaded||!retro_serialize_size||!retro_serialize) return nullptr;
+    size_t n=retro_serialize_size();
+    if(n==0 || n>16*1024*1024) return nullptr;
+    std::vector<uint8_t> state(n);
+    if(!retro_serialize(state.data(),n)) return nullptr;
+    jbyteArray arr=env->NewByteArray(static_cast<jsize>(n));
+    if(arr) env->SetByteArrayRegion(arr,0,static_cast<jsize>(n),
+                                    reinterpret_cast<const jbyte*>(state.data()));
+    return arr;
+}
+extern "C" JNIEXPORT jboolean JNICALL
+Java_dev_antidark_neslivingroom_NativeNes_loadState(JNIEnv* env,jclass,jbyteArray data) {
+    if(!loaded||!data||!retro_unserialize) return JNI_FALSE;
+    const jsize n=env->GetArrayLength(data);
+    if(n<=0||n>16*1024*1024) return JNI_FALSE;
+    std::vector<uint8_t> state(n);
+    env->GetByteArrayRegion(data,0,n,reinterpret_cast<jbyte*>(state.data()));
+    return retro_unserialize(state.data(),state.size())?JNI_TRUE:JNI_FALSE;
+}
