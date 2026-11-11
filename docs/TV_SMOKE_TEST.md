@@ -19,14 +19,18 @@
 2. Select ROM through system picker, verify selected title persists after restarting the app.
 3. Select **Play selected ROM**. Expect game video in a 4:3 view with black sidebars and audible game audio.
 4. Use remote D-pad for movement in-game. The remote is intended for UI testing first and is **not** a complete NES pad.
-5. Press remote Back in-game and verify the pause menu. Resume currently restarts ROM from frame zero; Exit returns to TV menu.
+5. Press remote Back in-game and verify the pause menu. Resume must continue the same game frame; Save State and Load State should restore the same progress; Exit returns to TV menu.
 6. Repeat with a second ROM and check black screen, audio underrun, crash, or timing problems.
 
 ## 3. Gamepad (later)
 
 - Verify Android enumerates the device in `adb shell getevent -lp` first.
+- Open **Connected controllers** to record Android device name, VID/PID and input sources; check that the gamepad is recognized before testing mappings.
 - Default A/B normal; X/Y Turbo A/B. Start, Select and D-pad.
+- Test 8BitDo in Android-compatible Bluetooth mode, then test the D-pad, HAT and left analog stick separately.
+- Verify **Restore default controller mapping** resets remapped keys after confirmation.
 - Test independent turbo pulses, key rebinding, and no stuck inputs after game exit or disconnect.
+- Test the game pause menu: Resume preserves game state; Save State creates a slot; Load State restores it; Exit ends gameplay.
 - Existing USB Xbox 360 mode `045e:028e` may not work if kernel lacks `CONFIG_JOYSTICK_XPAD`.
 
 ## 4. Logs to collect when failing
