@@ -15,6 +15,7 @@ import android.graphics.Typeface;
 import android.view.Gravity;
 import android.view.InputDevice;
 import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -88,6 +89,7 @@ public final class MainActivity extends Activity {
         addButton("Play selected ROM", v->startGame());
         addButton("Controller settings",v->showSettings());
         addButton("Input tester",v->showTester());
+        addButton("Connected controllers",v->showControllers());
         SharedPreferences p=getSharedPreferences("nes_rom",MODE_PRIVATE);
         String rom=p.getString("rom_name","No ROM selected");
         TextView status=new TextView(this);
@@ -144,12 +146,43 @@ public final class MainActivity extends Activity {
         capturing=action;
         addButton("Cancel",v->showSettings()).requestFocus();
     }
+    private void showControllers() {
+        page("controllers","Connected input devices","This displays Android input devices, not every Bluetooth pairing.");
+        int count=0;
+        for(int id: InputDevice.getDeviceIds()) {
+            InputDevice device=InputDevice.getDevice(id);
+            if(device==null) continue;
+            int source=device.getSources();
+            boolean controller=(source & InputDevice.SOURCE_GAMEPAD)==InputDevice.SOURCE_GAMEPAD ||
+                               (source & InputDevice.SOURCE_JOYSTICK)==InputDevice.SOURCE_JOYSTICK;
+            if(!controller) continue;
+            count++;
+            TextView info=new TextView(this);
+            info.setText(device.getName()+"\nVID: "+device.getVendorId()+"  PID: "+device.getProductId()+
+                "\nDevice ID: "+device.getId()+"\nSource: 0x"+Integer.toHexString(source));
+            info.setTextColor(Color.WHITE);info.setTextSize(17);info.setPadding(0,12,0,20);
+            column.addView(info);
+        }
+        if(count==0) {
+            TextView none=new TextView(this);
+            none.setText("No Android gamepad input device detected.\nA paired Bluetooth device may still need a compatible controller mode.");
+            none.setTextColor(Color.WHITE);none.setTextSize(18);
+            column.addView(none);
+        }
+        addButton("Refresh list",v->showControllers()).requestFocus();
+        addButton("Back to home",v->showHome());
+    }
     private void showTester() {
         page("tester","Input tester","Press the configured gamepad buttons. Turbo A/B pulse at the selected rate.");
         testerStatus=new TextView(this); testerStatus.setTextSize(22); testerStatus.setTextColor(Color.WHITE);
         testerStatus.setPadding(0,20,0,28); column.addView(testerStatus);
         addButton("Back to home",v->showHome()).requestFocus();
         testing=true; handler.post(tick);
+    }
+    @Override public boolean onGenericMotionEvent(MotionEvent event) {
+        if("tester".equals(screen) && event.getAction()==MotionEvent.ACTION_MOVE &&
+                input.onMotion(event)) return true;
+        return super.onGenericMotionEvent(event);
     }
     @Override public boolean dispatchKeyEvent(KeyEvent event) {
         int code=event.getKeyCode();
