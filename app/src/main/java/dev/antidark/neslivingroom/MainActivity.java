@@ -142,6 +142,11 @@ public final class MainActivity extends Activity {
                 v->startCapture(action));
         }
         addButton("Turbo rate: "+input.turboHz()+" presses/sec",v->{input.cycleTurboHz();showSettings();});
+        addButton("Restore default controller mapping",v->new android.app.AlertDialog.Builder(this)
+            .setTitle("Restore default mapping?")
+            .setMessage("A/B normal, X/Y turbo. Your custom mappings will be cleared.")
+            .setPositiveButton("Restore",(dialog,which)->{input.resetDefaults();showSettings();})
+            .setNegativeButton("Cancel",null).show());
         addButton("Back to home",v->showHome());
         column.getChildAt(2).requestFocus();
     }
@@ -196,7 +201,8 @@ public final class MainActivity extends Activity {
             if(down && event.getRepeatCount()==0) {
                 if(code==KeyEvent.KEYCODE_BACK) {showSettings();return true;}
                 // Avoid trapping remote navigation/OK keys as controller bindings.
-                if(event.getDevice()!=null && (event.getSource() & InputDevice.SOURCE_GAMEPAD)==InputDevice.SOURCE_GAMEPAD) {
+                if(event.getDevice()!=null && ((event.getDevice().getSources() & InputDevice.SOURCE_GAMEPAD)==InputDevice.SOURCE_GAMEPAD ||
+                    (event.getDevice().getSources() & InputDevice.SOURCE_JOYSTICK)==InputDevice.SOURCE_JOYSTICK)) {
                     input.bind(capturing,code);showSettings();return true;
                 }
             }
@@ -205,8 +211,10 @@ public final class MainActivity extends Activity {
         if("tester".equals(screen)) {
             if(code==KeyEvent.KEYCODE_BACK && down) {showHome();return true;}
             // A TV remote must keep control of menu focus. Only gamepad events feed NES input.
-            if(code!=KeyEvent.KEYCODE_BACK && (event.getSource() & InputDevice.SOURCE_GAMEPAD)==InputDevice.SOURCE_GAMEPAD
-                && input.onKey(code,down)) return true;
+            if(code!=KeyEvent.KEYCODE_BACK && event.getDevice()!=null &&
+                (((event.getDevice().getSources() & InputDevice.SOURCE_GAMEPAD)==InputDevice.SOURCE_GAMEPAD) ||
+                 ((event.getDevice().getSources() & InputDevice.SOURCE_JOYSTICK)==InputDevice.SOURCE_JOYSTICK)) &&
+                input.onKey(code,down)) return true;
         }
         return super.dispatchKeyEvent(event);
     }
